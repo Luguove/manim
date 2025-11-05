@@ -1,3 +1,8 @@
+"""@file manimlib/scene/scene.py
+@brief 定义 Scene 基类并驱动渲染主流程。
+@details Scene 负责管理动画时间线、更新对象与相机、触发摄像机渲染以及文件写出，是 Manim 渲染管线的核心入口。
+"""
+
 from __future__ import annotations
 
 from collections import OrderedDict
@@ -50,6 +55,9 @@ if TYPE_CHECKING:
 
 
 class Scene(object):
+    """@brief Manim 场景基类，统一调度渲染生命周期。
+    @details 负责管理动画播放、事件循环、相机捕获与文件写出，是所有具体场景的父类。
+    """
     random_seed: int = 0
     pan_sensitivity: float = 0.5
     scroll_sensitivity: float = 20
@@ -147,6 +155,9 @@ class Scene(object):
         return self.window
 
     def run(self) -> None:
+        """@brief 执行场景主流程。
+        @details 顺序调用 `setup -> construct -> interact -> tear_down`，并在进入动画阶段前初始化文件写入器与时间基准。
+        """
         self.virtual_animation_start_time: float = 0
         self.real_animation_start_time: float = time.time()
         self.file_writer.begin()
@@ -234,6 +245,11 @@ class Scene(object):
         self.get_image().show()
 
     def update_frame(self, dt: float = 0, force_draw: bool = False) -> None:
+        """@brief 推进时间并驱动本帧渲染。
+        @param dt 逻辑时间增量，决定 updater 与动画插值步长。
+        @param force_draw 是否在跳帧模式下仍强制渲染。
+        @details 该方法会更新时间、触发所有 Mobject 的 updater、执行窗口事件循环，并最终让相机捕获当前 `render_groups`。
+        """
         self.increment_time(dt)
         self.update_mobjects(dt)
         if self.skip_animations and not force_draw:
@@ -256,6 +272,9 @@ class Scene(object):
             time.sleep(max(vt - rt, 0))
 
     def emit_frame(self) -> None:
+        """@brief 将当前相机缓冲写入输出。
+        @details 当未跳过动画时，调用 `SceneFileWriter.write_frame` 把 FBO 数据写入视频管线或图像文件。
+        """
         if not self.skip_animations:
             self.file_writer.write_frame(self.camera)
 
@@ -298,10 +317,8 @@ class Scene(object):
         return extract_mobject_family_members(self.mobjects)
 
     def assemble_render_groups(self):
-        """
-        Rendering can be more efficient when mobjects of the
-        same type are grouped together, so this function creates
-        Groups of all clusters of adjacent Mobjects in the scene
+        """@brief 按渲染特性分组 Mobject。
+        @details 将类型、着色器与 z-index 相同的 Mobject 聚合为单个批次，以减少着色器切换和 draw call，从而提升渲染效率。
         """
         batches = batch_by_property(
             self.mobjects,
@@ -540,6 +557,9 @@ class Scene(object):
         self.num_plays += 1
 
     def begin_animations(self, animations: Iterable[Animation]) -> None:
+        """@brief 初始化动画并将相关对象加入场景。
+        @details 调用每个动画的 `begin`，并确保待播放的 Mobject 均存在于场景树中。
+        """
         all_mobjects = set(self.get_mobject_family_members())
         for animation in animations:
             animation.begin()
@@ -553,6 +573,9 @@ class Scene(object):
                 all_mobjects = all_mobjects.union(animation.mobject.get_family())
 
     def progress_through_animations(self, animations: Iterable[Animation]) -> None:
+        """@brief 逐帧推进动画时间并渲染。
+        @details 根据时间进度计算每帧的 dt，依次调用动画的 `update_mobjects` 与 `interpolate`，随后刷新画面并输出帧。
+        """
         last_t = 0
         for t in self.get_animation_time_progression(animations):
             dt = t - last_t
@@ -581,6 +604,9 @@ class Scene(object):
         rate_func: Callable[[float], float] | None = None,
         lag_ratio: float | None = None,
     ) -> None:
+        """@brief 播放一组动画。
+        @details 负责把动画生成器统一转换为 `Animation`，配置时长与速度曲线，并串联执行 `pre_play -> begin -> progress -> finish -> post_play`。
+        """
         if len(proto_animations) == 0:
             log.warning("Called Scene.play with no animations")
             return

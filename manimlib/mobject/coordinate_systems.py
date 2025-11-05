@@ -186,6 +186,11 @@ class CoordinateSystem(ABC):
         bind: bool = False,
         **kwargs
     ) -> ParametricCurve:
+        """@brief 根据给定函数生成二维函数曲线。
+        @param function 原始数学函数 f(x)。
+        @param x_range 采样区间与步长，默认取坐标轴设置。
+        @details 会将函数封装为 `ParametricCurve`，在采样点执行坐标系的 `c2p` 映射，从数学坐标转换到场景坐标。
+        """
         x_range = x_range or self.x_range
         t_range = np.ones(3)
         t_range[:len(x_range)] = x_range
@@ -228,6 +233,11 @@ class CoordinateSystem(ABC):
         x: float,
         graph: ParametricCurve
     ) -> Vect3 | None:
+        """@brief 将 x 值转换为曲线上对应的场景坐标。
+        @param x 数学坐标中的横坐标。
+        @param graph 目标曲线。
+        @details 若曲线携带原函数，则直接计算 `c2p(x, f(x))`；否则通过二分查找曲线参数获得最近的顶点。
+        """
         if hasattr(graph, "underlying_function"):
             return self.coords_to_point(x, graph.underlying_function(x))
         else:
@@ -257,9 +267,8 @@ class CoordinateSystem(ABC):
         jagged: bool = False,
         get_discontinuities: Optional[Callable[[], Vect3]] = None
     ) -> VMobject:
-        """
-        Use for graphing functions which might change over time, or change with
-        conditions
+        """@brief 将生成的曲线绑定到动态函数。
+        @details 可用于需要随时间或参数变化的函数图像，会在每帧重新计算采样点并保持曲线平滑。
         """
         x_values = np.array([self.x_axis.p2n(p) for p in graph.get_points()])
 

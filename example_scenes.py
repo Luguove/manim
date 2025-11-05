@@ -1,16 +1,24 @@
+"""@file example_scenes.py
+@brief Manim 示例场景合集。
+@details 本文件展示了多个典型的 Manim 动画场景，帮助快速了解常用接口。
+"""
+
 from manimlib import *
 import numpy as np
 
-# To watch one of these scenes, run the following:
-# manimgl example_scenes.py OpeningManimExample
-# Use -s to skip to the end and just save the final frame
-# Use -w to write the animation to a file
-# Use -o to write it to a file and open it once done
-# Use -n <number> to skip ahead to the n'th animation of a scene.
+# To watch one of these scenes, run the following: 要观看这些示例场景，请运行：
+# manimgl example_scenes.py OpeningManimExample （示例命令）
+# Use -s to skip to the end and just save the final frame（使用 -s 参数可跳到结尾并只保存最终帧）
+# Use -w to write the animation to a file（使用 -w 参数将动画写入文件）
+# Use -o to write it to a file and open it once done（使用 -o 参数输出文件并在结束后自动打开）
+# Use -n <number> to skip ahead to the n'th animation of a scene.（使用 -n <number> 参数跳转到第 n 个子动画）
 
 
 class OpeningManimExample(Scene):
+    """@brief 开场 Manim 示例场景，展示线性变换与复平面映射。"""
+
     def construct(self):
+        """@brief 构建演示动画的各个步骤。"""
         intro_words = Text("""
             The original motivation for manim was to
             better illustrate mathematical functions
@@ -22,6 +30,7 @@ class OpeningManimExample(Scene):
         self.wait(2)
 
         # Linear transform
+        # 线性变换
         grid = NumberPlane((-10, 10), (-5, 5))
         matrix = [[1, 1], [0, 1]]
         linear_transform_words = VGroup(
@@ -42,6 +51,7 @@ class OpeningManimExample(Scene):
         self.wait()
 
         # Complex map
+        # 复映射
         c_grid = ComplexPlane()
         moving_c_grid = c_grid.copy()
         moving_c_grid.prepare_for_nonlinear_transform()
@@ -69,21 +79,22 @@ class OpeningManimExample(Scene):
 
 
 class AnimatingMethods(Scene):
+    """@brief 演示通过 animate 语法调用 Mobject 方法的场景。"""
+
     def construct(self):
+        """@brief 展示多个通过 animate 调用实现的动画效果。"""
         grid = Tex(R"\pi").get_grid(10, 10, height=4)
         self.add(grid)
 
-        # You can animate the application of mobject methods with the
-        # ".animate" syntax:
+        # You can animate the application of mobject methods with the ".animate" syntax.
+        # 你可以使用 ".animate" 语法将 Mobject 方法的调用制作成动画效果。
         self.play(grid.animate.shift(LEFT))
 
-        # Both of those will interpolate between the mobject's initial
-        # state and whatever happens when you apply that method.
-        # For this example, calling grid.shift(LEFT) would shift the
-        # grid one unit to the left, but both of the previous calls to
-        # "self.play" animate that motion.
+        # Both animations interpolate from the mobject's initial state to the post-method state; calling grid.shift(LEFT) shifts the grid left by one unit, and self.play animates that motion.
+        # 以上动画都会在物体的初始状态与方法调用后的状态之间插值，直接调用 grid.shift(LEFT) 会让网格左移一个单位，而 self.play 则把它变成动画。
 
         # The same applies for any method, including those setting colors.
+        # 这一结论对其他方法同样适用，包括设置颜色的方法。
         self.play(grid.animate.set_color(YELLOW))
         self.wait()
         self.play(grid.animate.set_submobject_colors_by_gradient(BLUE, GREEN))
@@ -91,14 +102,13 @@ class AnimatingMethods(Scene):
         self.play(grid.animate.set_height(TAU - MED_SMALL_BUFF))
         self.wait()
 
-        # The method Mobject.apply_complex_function lets you apply arbitrary
-        # complex functions, treating the points defining the mobject as
-        # complex numbers.
+        # The method Mobject.apply_complex_function lets you apply arbitrary complex functions by treating defining points as complex numbers.
+        # Mobject.apply_complex_function 允许将任意复函数作用于对象，并把物体上的点视作复数。
         self.play(grid.animate.apply_complex_function(np.exp), run_time=5)
         self.wait()
 
-        # Even more generally, you could apply Mobject.apply_function,
-        # which takes in functions form R^3 to R^3
+        # More generally, Mobject.apply_function lets you apply functions from R^3 to R^3.
+        # 更一般地，可以使用 Mobject.apply_function，将 R^3 到 R^3 的函数作用于对象。
         self.play(
             grid.animate.apply_function(
                 lambda p: [
@@ -113,9 +123,12 @@ class AnimatingMethods(Scene):
 
 
 class TextExample(Scene):
+    """@brief 展示 Text 与字体配置差异的示例场景。"""
+
     def construct(self):
-        # To run this scene properly, you should have "Consolas" font in your computer
-        # for full usage, you can see https://github.com/3b1b/manim/pull/680
+        """@brief 对比 Text 配置并说明字体控制。"""
+        # To run this scene properly, ensure the \"Consolas\" font is installed; see https://github.com/3b1b/manim/pull/680 for details.
+        # 若要正确播放本场景，请确保系统安装了 \"Consolas\" 字体；更多信息参见 https://github.com/3b1b/manim/pull/680。
         text = Text("Here is a text", font="Consolas", font_size=90)
         difference = Text(
             """
@@ -124,6 +137,7 @@ class TextExample(Scene):
             """,
             font="Arial", font_size=24,
             # t2c is a dict that you can choose color for different text
+            # t2c 是一个字典，可为不同文本选择颜色。
             t2c={"Text": BLUE, "TexText": BLUE, "LaTeX": ORANGE}
         )
         VGroup(text, difference).arrange(DOWN, buff=1)
@@ -154,14 +168,19 @@ class TextExample(Scene):
 
 
 class TexTransformExample(Scene):
+    """@brief 演示 Tex 变换与字符串匹配的场景。"""
+
     def construct(self):
+        """@brief 展示不同 Tex 变换组合的效果。"""
         # Tex to color map
+        # Tex 字符到颜色的映射表
         t2c = {
             "A": BLUE,
             "B": TEAL,
             "C": GREEN,
         }
         # Configuration to pass along to each Tex mobject
+        # 需要传给每个 Tex 对象的统一配置
         kw = dict(font_size=72, t2c=t2c)
         lines = VGroup(
             Tex("A^2 + B^2 = C^2", **kw),
@@ -172,23 +191,16 @@ class TexTransformExample(Scene):
         lines.arrange(DOWN, buff=LARGE_BUFF)
 
         self.add(lines[0])
-        # The animation TransformMatchingStrings will line up parts
-        # of the source and target which have matching substring strings.
-        # Here, giving it a little path_arc makes each part rotate into
-        # their final positions, which feels appropriate for the idea of
-        # rearranging an equation
+        # The animation TransformMatchingStrings lines up matching substrings, and a small path_arc lets pieces rotate into their final positions—great for equation rearrangements.
+        # TransformMatchingStrings 会对齐源和目标中匹配的子串，设置轻微的 path_arc 可让部件旋转到位，表现等式重排。
         self.play(
             TransformMatchingStrings(
                 lines[0].copy(), lines[1],
-                # matched_keys specifies which substring should
-                # line up. If it's not specified, the animation
-                # will align the longest matching substrings.
-                # In this case, the substring "^2 = C^2" would
-                # trip it up
+                # matched_keys specifies which substrings should align; otherwise the longest match like "^2 = C^2" would be used.
+                # matched_keys 指定需要对齐的子串，避免自动匹配时出现歧义，此例可防止把 "^2 = C^2" 视为最长匹配字符串。
                 matched_keys=["A^2", "B^2", "C^2"],
-                # When you want a substring from the source
-                # to go to a non-equal substring from the target,
-                # use the key map.
+                # When mapping to a different substring on the target, use key_map.
+                # 当需要将源字符串中的片段映射到不同目标片段时，可使用 key_map。
                 key_map={"+": "-"},
                 path_arc=90 * DEG,
             ),
@@ -209,9 +221,8 @@ class TexTransformExample(Scene):
         self.wait(2)
         self.play(LaggedStartMap(FadeOut, lines, shift=2 * RIGHT))
 
-        # TransformMatchingShapes will try to line up all pieces of a
-        # source mobject with those of a target, regardless of the
-        # what Mobject type they are.
+        # TransformMatchingShapes matches all submobjects between source and target regardless of their types.
+        # TransformMatchingShapes 会尝试匹配源与目标中的所有子对象，并不关心两者的 Mobject 类型是否一致。
         source = Text("the morse code", height=1)
         target = Text("here come dots", height=1)
         saved_source = source.copy()
@@ -226,8 +237,12 @@ class TexTransformExample(Scene):
 
 
 class TexIndexing(Scene):
+    """@brief 演示 Tex 对象的索引与正则匹配。"""
+
     def construct(self):
+        """@brief 展示多种基于索引的 Tex 部分操作。"""
         # You can index into Tex mobject (or other StringMobjects) by substrings
+        # 可以通过子串来索引 Tex 对象（或其他字符串对象）。
         equation = Tex(R"e^{\pi i} = -1", font_size=144)
 
         self.add(equation)
@@ -244,6 +259,7 @@ class TexIndexing(Scene):
         self.play(FadeOut(equation))
 
         # Or regular expressions
+        # 也可以使用正则表达式来索引。
         equation = Tex("A^2 + B^2 = C^2", font_size=144)
 
         self.play(Write(equation))
@@ -252,23 +268,20 @@ class TexIndexing(Scene):
         self.wait()
         self.play(FadeOut(equation))
         
-        # Indexing by substrings like this may not work when
-        # the order in which Latex draws symbols does not match
-        # the order in which they show up in the string.
-        # For example, here the infinity is drawn before the sigma
-        # so we don't get the desired behavior.
+        # Indexing by substrings can fail when LaTeX draws symbols in a different order than they appear; here infinity is drawn before sigma, so the match is missed.
+        # 当 LaTeX 绘制符号的顺序与字符串中出现的顺序不一致时，基于子串的索引可能会失败，例如此处无穷符号比西格玛先绘制。
         equation = Tex(R"\sum_{n = 1}^\infty \frac{1}{n^2} = \frac{\pi^2}{6}", font_size=72)
         self.play(FadeIn(equation))
         self.play(equation[R"\infty"].animate.set_color(RED))  # Doesn't hit the infinity
         self.wait()
         self.play(FadeOut(equation))
 
-        # However you can always fix this by explicitly passing in
-        # a string you might want to isolate later. Also, using
-        # \over instead of \frac helps to avoid the issue for fractions
+        # Explicitly passing substrings to isolate—and using \over instead of \frac—prevents the issue.
+        # 通过在创建时显式传入需要分离的子串，同时对分数使用 \\over 代替 \\frac，可以避免该问题。
         equation = Tex(
             R"\sum_{n = 1}^\infty {1 \over n^2} = {\pi^2 \over 6}",
             # Explicitly mark "\infty" as a substring you might want to access
+            # 显式标记可能需要访问的子串 \"\\infty\"
             isolate=[R"\infty"],
             font_size=72
         )
@@ -279,36 +292,36 @@ class TexIndexing(Scene):
 
 
 class UpdatersExample(Scene):
+    """@brief 演示 updaters 与 always_* 工具的场景。"""
+
     def construct(self):
+        """@brief 展示多种基于更新器的动态更新技巧。"""
         square = Square()
         square.set_fill(BLUE_E, 1)
 
-        # On all frames, the constructor Brace(square, UP) will
-        # be called, and the mobject brace will set its data to match
-        # that of the newly constructed object
+        # On every frame Brace(square, UP) is rebuilt so the brace stays aligned with the square.
+        # 每一帧都会重新调用 Brace(square, UP)，保证括号与方块保持同步。
         brace = always_redraw(Brace, square, UP)
 
         label = TexText("Width = 0.00")
         number = label.make_number_changeable("0.00")
 
-        # This ensures that the method deicmal.next_to(square)
-        # is called on every frame
+        # This ensures decimal.next_to(square) is called on every frame.
+        # 这样可以确保每一帧都会调用 decimal.next_to(square)。
         label.always.next_to(brace, UP)
-        # You could also write the following equivalent line
-        # label.add_updater(lambda m: m.next_to(brace, UP))
+        # You could also write the following equivalent line（也可以使用 add_updater 编写等价逻辑）
+        # label.add_updater(lambda m: m.next_to(brace, UP))  # 与 add_updater 等价写法
 
-        # If the argument itself might change, you can use f_always,
-        # for which the arguments following the initial Mobject method
-        # should be functions returning arguments to that method.
-        # The following line ensures thst decimal.set_value(square.get_y())
-        # is called every frame
+        # When arguments may change, use f_always with callables returning the updated parameters so decimal.set_value runs every frame.
+        # 当方法参数本身会变化时，可使用 f_always，并提供返回参数的函数；这样能保证每帧都调用 decimal.set_value(square.get_width)。
         number.f_always.set_value(square.get_width)
-        # You could also write the following equivalent line
-        # number.add_updater(lambda m: m.set_value(square.get_width()))
+        # You could also write the following equivalent line（也可以通过 add_updater 实现相同的效果）
+        # number.add_updater(lambda m: m.set_value(square.get_width()))  # 与 add_updater 等价写法
 
         self.add(square, brace, label)
 
-        # Notice that the brace and label track with the square
+        # Notice that the brace and label track with the square.
+        # 括号和标签会持续跟随方块的尺寸变化。
         self.play(
             square.animate.scale(2),
             rate_func=there_and_back,
@@ -326,10 +339,8 @@ class UpdatersExample(Scene):
         )
         self.wait()
 
-        # In general, you can always call Mobject.add_updater, and pass in
-        # a function that you want to be called on every frame.  The function
-        # should take in either one argument, the mobject, or two arguments,
-        # the mobject and the amount of time since the last frame.
+        # In general, Mobject.add_updater lets you register a function per frame, receiving the mobject (and optionally elapsed time) each call.
+        # 总的来说，可以调用 Mobject.add_updater，并传入每帧执行的函数；函数参数可以是 Mobject 自身，或额外包含上一帧到现在的时间。
         now = self.time
         w0 = square.get_width()
         square.add_updater(
@@ -339,42 +350,37 @@ class UpdatersExample(Scene):
 
 
 class CoordinateSystemExample(Scene):
+    """@brief 演示坐标系及坐标转换的场景。"""
+
     def construct(self):
+        """@brief 展示在坐标系中定位、移动点以及辅助线。"""
         axes = Axes(
-            # x-axis ranges from -1 to 10, with a default step size of 1
+            # x-axis ranges from -1 to 10, with a default step size of 1（x 轴范围为 -1 到 10，默认步长为 1）
             x_range=(-1, 10),
-            # y-axis ranges from -2 to 2 with a step size of 0.5
+            # y-axis ranges from -2 to 2 with a step size of 0.5（y 轴范围为 -2 到 2，步长 0.5）
             y_range=(-2, 2, 0.5),
-            # The axes will be stretched so as to match the specified
-            # height and width
+            # The axes stretch to match the specified height and width.（坐标轴会被缩放以匹配指定的高度和宽度）
             height=6,
             width=10,
-            # Axes is made of two NumberLine mobjects.  You can specify
-            # their configuration with axis_config
+            # Axes is made of two NumberLine mobjects; configure them with axis_config.（Axes 由两条 NumberLine 组成，可通过 axis_config 配置细节）
             axis_config=dict(
                 stroke_color=GREY_A,
                 stroke_width=2,
                 numbers_to_exclude=[0],
             ),
-            # Alternatively, you can specify configuration for just one
-            # of them, like this.
+            # Alternatively, configure just one axis as shown.（也可以像下面这样仅配置其中一条坐标轴。）
             y_axis_config=dict(
                 big_tick_numbers=[-2, 2],
             )
         )
-        # Keyword arguments of add_coordinate_labels can be used to
-        # configure the DecimalNumber mobjects which it creates and
-        # adds to the axes
+        # Keyword arguments of add_coordinate_labels configure the DecimalNumber mobjects it creates.（add_coordinate_labels 的关键字参数可用于配置生成的 DecimalNumber。）
         axes.add_coordinate_labels(
             font_size=20,
             num_decimal_places=1,
         )
         self.add(axes)
 
-        # Axes descends from the CoordinateSystem class, meaning
-        # you can call call axes.coords_to_point, abbreviated to
-        # axes.c2p, to associate a set of coordinates with a point,
-        # like so:
+        # Axes descends from CoordinateSystem, so axes.coords_to_point（axes.c2p） maps coordinates to points.（Axes 继承自 CoordinateSystem，可通过 coords_to_point（c2p）将坐标映射到平面点。）
         dot = Dot(color=RED)
         dot.move_to(axes.c2p(0, 0))
         self.play(FadeIn(dot, scale=0.5))
@@ -383,13 +389,10 @@ class CoordinateSystemExample(Scene):
         self.play(dot.animate.move_to(axes.c2p(5, 0.5)))
         self.wait()
 
-        # Similarly, you can call axes.point_to_coords, or axes.p2c
-        # print(axes.p2c(dot.get_center()))
+        # Similarly, axes.point_to_coords（axes.p2c）recovers coordinates from a point。print(axes.p2c(dot.get_center()))
+        # 同理可调用 point_to_coords（p2c）将点还原为坐标。
 
-        # We can draw lines from the axes to better mark the coordinates
-        # of a given point.
-        # Here, the always_redraw command means that on each new frame
-        # the lines will be redrawn
+        # Draw helper lines from the axes to mark coordinates; always_redraw redraws them each frame.（可以从坐标轴作出辅助线标记点的位置，always_redraw 会在每帧重绘这些线条。）
         h_line = always_redraw(lambda: axes.get_h_line(dot.get_left()))
         v_line = always_redraw(lambda: axes.get_v_line(dot.get_bottom()))
 
@@ -402,9 +405,7 @@ class CoordinateSystemExample(Scene):
         self.play(dot.animate.move_to(axes.c2p(1, 1)))
         self.wait()
 
-        # If we tie the dot to a particular set of coordinates, notice
-        # that as we move the axes around it respects the coordinate
-        # system defined by them.
+        # If the dot is tied to fixed coordinates, moving the axes keeps the dot consistent with that system.（如果将点绑定到特定坐标，移动坐标轴时它会保持与坐标系的相对关系。）
         f_always(dot.move_to, lambda: axes.c2p(1, 1))
         self.play(
             axes.animate.scale(0.75).to_corner(UL),
@@ -413,42 +414,39 @@ class CoordinateSystemExample(Scene):
         self.wait()
         self.play(FadeOut(VGroup(axes, dot, h_line, v_line)))
 
-        # Other coordinate systems you can play around with include
-        # ThreeDAxes, NumberPlane, and ComplexPlane.
+        # Other coordinate systems to explore include ThreeDAxes, NumberPlane, and ComplexPlane.（还可以尝试 ThreeDAxes、NumberPlane、ComplexPlane 等其他坐标系。）
 
 
 class GraphExample(Scene):
+    """@brief 演示绘制函数图像与处理不连续点的场景。"""
+
     def construct(self):
+        """@brief 展示多种函数曲线绘制与组合的效果。"""
         axes = Axes((-3, 10), (-1, 8), height=6)
         axes.add_coordinate_labels()
 
         self.play(Write(axes, lag_ratio=0.01, run_time=1))
 
         # Axes.get_graph will return the graph of a function
+        # Axes.get_graph 会返回给定函数的曲线。
         sin_graph = axes.get_graph(
             lambda x: 2 * math.sin(x),
             color=BLUE,
         )
-        # By default, it draws it so as to somewhat smoothly interpolate
-        # between sampled points (x, f(x)).  If the graph is meant to have
-        # a corner, though, you can set use_smoothing to False
+        # By default the curve smoothly interpolates sampled points; set use_smoothing=False if you need sharp corners.（默认情况下会平滑连接采样点；若需要出现拐角，可将 use_smoothing 设为 False。）
         relu_graph = axes.get_graph(
             lambda x: max(x, 0),
             use_smoothing=False,
             color=YELLOW,
         )
-        # For discontinuous functions, you can specify the point of
-        # discontinuity so that it does not try to draw over the gap.
+        # For discontinuous functions specify the discontinuities so the graph avoids bridging gaps.（对于不连续函数，可以指定间断点以避免跨越间隙绘制。）
         step_graph = axes.get_graph(
             lambda x: 2.0 if x > 3 else 1.0,
             discontinuities=[3],
             color=GREEN,
         )
 
-        # Axes.get_graph_label takes in either a string or a mobject.
-        # If it's a string, it treats it as a LaTeX expression.  By default
-        # it places the label next to the graph near the right side, and
-        # has it match the color of the graph
+        # Axes.get_graph_label accepts a string (interpreted as LaTeX) or mobject, places it near the right side, and matches the graph color.（Axes.get_graph_label 接受字符串或 Mobject，字符串按 LaTeX 解析，默认把标签放在右侧并匹配曲线颜色。）
         sin_label = axes.get_graph_label(sin_graph, "\\sin(x)")
         relu_label = axes.get_graph_label(relu_graph, Text("ReLU"))
         step_label = axes.get_graph_label(step_graph, Text("Step"), x=4)
@@ -478,15 +476,12 @@ class GraphExample(Scene):
         )
         self.wait()
 
-        # You can use axes.input_to_graph_point, abbreviated
-        # to axes.i2gp, to find a particular point on a graph
+        # Use axes.input_to_graph_point（axes.i2gp） to locate points on the graph.（可以使用 axes.input_to_graph_point（i2gp）定位曲线上的点。）
         dot = Dot(color=RED)
         dot.move_to(axes.i2gp(2, parabola))
         self.play(FadeIn(dot, scale=0.5))
 
-        # A value tracker lets us animate a parameter, usually
-        # with the intent of having other mobjects update based
-        # on the parameter
+        # A ValueTracker animates a parameter so other mobjects can react to it.（ValueTracker 可以驱动参数动画，从而联动其他对象发生更新。）
         x_tracker = ValueTracker(2)
         dot.add_updater(lambda d: d.move_to(axes.i2gp(x_tracker.get_value(), parabola)))
 
@@ -496,7 +491,10 @@ class GraphExample(Scene):
 
 
 class TexAndNumbersExample(Scene):
+    """@brief 演示 Tex 对象与数字的动态联动效果。"""
+
     def construct(self):
+        """@brief 展示圆半径与公式参数绑定的动画流程。"""
         axes = Axes((-3, 3), (-3, 3), unit_size=1)
         axes.to_edge(DOWN)
         axes.add_coordinate_labels(font_size=16)
@@ -505,18 +503,13 @@ class TexAndNumbersExample(Scene):
         circle.move_to(axes.get_origin())
         self.add(axes, circle)
 
-        # When numbers show up in tex, they can be readily
-        # replaced with DecimalMobjects so that methods like
-        # get_value and set_value can be called on them, and
-        # animations like ChangeDecimalToValue can be called
-        # on them.
+        # Numbers within Tex can be replaced by DecimalMobjects to enable get_value/set_value and animations like ChangeDecimalToValue.（Tex 中的数字可以替换为 DecimalMobject，以便调用 get_value / set_value 等方法并配合数值动画。）
         tex = Tex("x^2 + y^2 = 4.00")
         tex.next_to(axes, UP, buff=0.5)
         value = tex.make_number_changeable("4.00")
 
 
-        # This will tie the right hand side of our equation to
-        # the square of the radius of the circle
+        # This ties the equation's right-hand side to the square of the circle radius.（这样就能把等式右端与圆半径的平方绑定起来。）
         value.add_updater(lambda v: v.set_value(circle.get_radius()**2))
         self.add(tex)
 
@@ -534,9 +527,7 @@ class TexAndNumbersExample(Scene):
             rate_func=there_and_back,
         )
 
-        # By default, tex.make_number_changeable replaces the first occurrence
-        # of the number,but by passing replace_all=True it replaces all and
-        # returns a group of the results
+        # By default tex.make_number_changeable replaces the first match; replace_all=True updates all matches and returns the group.（默认只替换第一个匹配数字，传入 replace_all=True 可替换全部并返回结果组。）
         exponents = tex.make_number_changeable("2", replace_all=True)
         self.play(
             LaggedStartMap(
@@ -548,6 +539,7 @@ class TexAndNumbersExample(Scene):
 
         def func(x, y):
             # Switch from manim coords to axes coords
+            # 将 manim 坐标转换到坐标轴坐标系
             xa, ya = axes.point_to_coords(np.array([x, y, 0]))
             return xa**4 + ya**4 - 4
 
@@ -564,7 +556,10 @@ class TexAndNumbersExample(Scene):
 
 
 class SurfaceExample(ThreeDScene):
+    """@brief 演示三维曲面、贴图与光照的场景。"""
+
     def construct(self):
+        """@brief 展示三维曲面转换与光源调整的步骤。"""
         surface_text = Text("For 3d scenes, try using surfaces")
         surface_text.fix_in_frame()
         surface_text.to_edge(UP)
@@ -574,14 +569,10 @@ class SurfaceExample(ThreeDScene):
         torus1 = Torus(r1=1, r2=1)
         torus2 = Torus(r1=3, r2=1)
         sphere = Sphere(radius=3, resolution=torus1.resolution)
-        # You can texture a surface with up to two images, which will
-        # be interpreted as the side towards the light, and away from
-        # the light.  These can be either urls, or paths to a local file
-        # in whatever you've set as the image directory in
-        # the custom_config.yml file
+        # You can texture a surface with up to two images for the light-facing and shadow sides, using URLs or image-directory paths from custom_config.yml.（曲面最多可使用两张贴图，分别代表向光面和背光面，可使用 URL 或自定义图像目录下的本地路径。）
 
-        # day_texture = "EarthTextureMap"
-        # night_texture = "NightEarthTextureMap"
+        # day_texture = "EarthTextureMap"  # 示例白天纹理
+        # night_texture = "NightEarthTextureMap"  # 示例夜间纹理
         day_texture = "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Whole_world_-_land_and_oceans.jpg/1280px-Whole_world_-_land_and_oceans.jpg"
         night_texture = "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/The_earth_at_night.jpg/1280px-The_earth_at_night.jpg"
 
@@ -616,14 +607,17 @@ class SurfaceExample(ThreeDScene):
         self.play(
             Transform(surface, surfaces[2]),
             # Move camera frame during the transition
+            # 在转场过程中移动相机
             self.frame.animate.increment_phi(-10 * DEG),
             self.frame.animate.increment_theta(-20 * DEG),
             run_time=3
         )
         # Add ambient rotation
+        # 为相机添加缓慢旋转
         self.frame.add_updater(lambda m, dt: m.increment_theta(-0.1 * dt))
 
         # Play around with where the light is
+        # 试着移动光源位置
         light_text = Text("You can move around the light source")
         light_text.move_to(surface_text)
         light_text.fix_in_frame()
@@ -646,7 +640,10 @@ class SurfaceExample(ThreeDScene):
 
 
 class InteractiveDevelopment(Scene):
+    """@brief 演示交互式开发与 embed 调试流程的场景。"""
+
     def construct(self):
+        """@brief 展示 embed 终端交互与鼠标绑定示例。"""
         circle = Circle()
         circle.set_fill(BLUE, opacity=0.5)
         circle.set_stroke(BLUE_E, width=4)
@@ -655,14 +652,10 @@ class InteractiveDevelopment(Scene):
         self.play(ShowCreation(square))
         self.wait()
 
-        # This opens an iPython terminal where you can keep writing
-        # lines as if they were part of this construct method.
-        # In particular, 'square', 'circle' and 'self' will all be
-        # part of the local namespace in that terminal.
+        # This opens an iPython terminal so you can keep writing lines as if inside construct; 'square', 'circle', and 'self' remain in scope.（这会打开一个 iPython 终端，可像编写 construct 方法一样继续输入，其中 square、circle 与 self 都会在作用域中。）
         self.embed()
 
-        # Try copying and pasting some of the lines below into
-        # the interactive shell
+        # Try copying and pasting some lines below into the interactive shell.（可以尝试将下面的代码复制到交互式终端执行。）
         self.play(ReplacementTransform(square, circle))
         self.wait()
         self.play(circle.animate.stretch(4, 0))
@@ -675,26 +668,21 @@ class InteractiveDevelopment(Scene):
         """)
         self.play(Write(text))
 
-        # In the interactive shell, you can just type
-        # play, add, remove, clear, wait, save_state and restore,
-        # instead of self.play, self.add, self.remove, etc.
+        # In the interactive shell, call play/add/remove/clear/wait/save_state/restore without prefixing self.（在交互式终端中，可直接调用 play、add、remove、clear、wait、save_state、restore 等方法。）
 
-        # To interact with the window, type touch().  You can then
-        # scroll in the window, or zoom by holding down 'z' while scrolling,
-        # and change camera perspective by holding down 'd' while moving
-        # the mouse.  Press 'r' to reset to the standard camera position.
-        # Press 'q' to stop interacting with the window and go back to
-        # typing new commands into the shell.
+        # Type touch() to interact with the window: scroll to pan, hold 'z' to zoom, hold 'd' to adjust perspective, press 'r' to reset, and 'q' to exit back to the shell.（输入 touch() 可与窗口交互：滚轮滚动浏览，按住 z 滚动实现缩放，按住 d 移动鼠标改变视角，按 r 重置视角，按 q 退出交互回到终端。）
 
-        # In principle you can customize a scene to be responsive to
-        # mouse and keyboard interactions
+        # You can customize scenes to respond to mouse and keyboard interactions.（理论上可以自定义场景以响应鼠标和键盘事件。）
         always(circle.move_to, self.mouse_point)
 
 
 class ControlsExample(Scene):
+    """@brief 演示控件交互与实时文本更新的场景。"""
+
     drag_to_pan = False
 
     def setup(self):
+        """@brief 初始化文本框、复选框及颜色选择控件。"""
         self.textbox = Textbox()
         self.checkbox = Checkbox()
         self.color_picker = ColorSliders()
@@ -706,12 +694,13 @@ class ControlsExample(Scene):
         self.add(self.panel)
 
     def construct(self):
+        """@brief 通过控件数值驱动文本内容与样式的更新。"""
         text = Text("text", font_size=96)
 
         def text_updater(old_text):
             assert(isinstance(old_text, Text))
             new_text = Text(self.textbox.get_value(), font_size=old_text.font_size)
-            # new_text.align_data_and_family(old_text)
+            # new_text.align_data_and_family(old_text)  # 若需保持结构一致可取消注释
             new_text.move_to(old_text)
             if self.checkbox.get_value():
                 new_text.set_fill(
@@ -727,8 +716,8 @@ class ControlsExample(Scene):
         self.add(MotionMobject(text))
 
         self.textbox.set_value("Manim")
-        # self.wait(60)
-        # self.embed()
+        # self.wait(60)  # 保持场景暂停以观察控件
+        # self.embed()  # 进入交互式终端
 
 
-# See https://github.com/3b1b/videos for many, many more
+# See https://github.com/3b1b/videos for many, many more（更多示例参见此仓库）

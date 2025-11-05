@@ -1,3 +1,8 @@
+"""@file manimlib/scene/scene_file_writer.py
+@brief 管理渲染输出的写入与合成。
+@details SceneFileWriter 负责帧数据暂存、调用 FFmpeg 生成视频、拼接音频，并在渲染完成后输出最终文件。
+"""
+
 from __future__ import annotations
 
 import os
@@ -26,6 +31,9 @@ if TYPE_CHECKING:
 
 
 class SceneFileWriter(object):
+    """@brief 控制帧写出、视频生成与音频合成的工具类。
+    @details 与 Scene 协同工作，将相机输出的原始像素流写入文件，并在渲染结束时整理生成的资源。
+    """
     def __init__(
         self,
         scene: Scene,
@@ -282,6 +290,9 @@ class SceneFileWriter(object):
         self.progress_display.set_description(full_desc)
 
     def write_frame(self, camera: Camera) -> None:
+        """@brief 写入一帧图像数据。
+        @details 从相机读取 FBO 原始字节流，经由预先打开的 FFmpeg 管道写入视频文件，同时更新进度条。
+        """
         if self.write_to_movie:
             raw_bytes = camera.get_raw_fbo_data()
             self.writing_process.stdin.write(raw_bytes)
@@ -289,6 +300,9 @@ class SceneFileWriter(object):
                 self.progress_display.update()
 
     def close_movie_pipe(self) -> None:
+        """@brief 关闭 FFmpeg 管道并整理临时文件。
+        @details 停止写入进程、清理进度显示，并将临时输出移动到最终路径；若渲染被中断，则保留中间文件。
+        """
         self.writing_process.stdin.close()
         self.writing_process.wait()
         self.writing_process.terminate()
@@ -301,6 +315,9 @@ class SceneFileWriter(object):
             self.movie_file_path = self.temp_file_path
 
     def add_sound_to_video(self) -> None:
+        """@brief 将音频轨合入生成的视频文件。
+        @details 利用 FFmpeg 将临时生成的 WAV 文件与视频流合并，对齐时长并输出最终视频。
+        """
         movie_file_path = self.get_movie_file_path()
         stem, ext = os.path.splitext(movie_file_path)
         sound_file_path = stem + ".wav"
@@ -332,6 +349,9 @@ class SceneFileWriter(object):
         os.remove(sound_file_path)
 
     def save_final_image(self, image: Image) -> None:
+        """@brief 保存最终帧图像。
+        @details 将 Pillow 图像写入磁盘并输出完成提示，通常在 `save_last_frame` 开启时调用。
+        """
         file_path = self.get_image_file_path()
         image.save(file_path)
         self.print_file_ready_message(file_path)

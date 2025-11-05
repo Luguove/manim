@@ -15,6 +15,9 @@ if TYPE_CHECKING:
 
 
 class ParametricCurve(VMobject):
+    """@brief 基于参数方程的矢量曲线。
+    @details 通过给定的参数函数与采样步长生成路径，可处理不连续点并选择是否平滑曲线。
+    """
     def __init__(
         self,
         t_func: Callable[[float], Sequence[float] | Vect3],
@@ -36,6 +39,9 @@ class ParametricCurve(VMobject):
         return np.array(self.t_func(t))
 
     def init_points(self):
+        """@brief 初始化曲线采样点。
+        @details 按照给定参数范围与步长生成路径，自动在不连续点附近分段，并在需要时进行平滑。
+        """
         t_min, t_max, step = self.t_range
 
         jumps = np.array(self.discontinuities)
@@ -68,6 +74,9 @@ class ParametricCurve(VMobject):
 
 
 class FunctionGraph(ParametricCurve):
+    """@brief 通过一维函数生成的曲线对象。
+    @details 将 f(x) 映射为三维点 [x, f(x), 0]，继承 ParametricCurve 的采样与平滑逻辑。
+    """
     def __init__(
         self,
         function: Callable[[float], float],

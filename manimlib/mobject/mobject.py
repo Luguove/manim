@@ -2036,6 +2036,9 @@ class Mobject(object):
         return self.shader_wrapper
 
     def get_shader_wrapper_list(self, ctx: Context) -> list[ShaderWrapper]:
+        """@brief 构造当前 Mobject 及其子代共享的 ShaderWrapper 列表。
+        @details 按着色器 ID 批量聚合子 Mobject，将几何数据上传到 GPU，避免重复初始化 shader。
+        """
         family = self.family_members_with_points()
         batches = batch_by_property(family, lambda sm: sm.get_shader_wrapper(ctx).get_id())
 
@@ -2061,6 +2064,9 @@ class Mobject(object):
         return None
 
     def render(self, ctx: Context, camera_uniforms: dict):
+        """@brief 将当前 Mobject 绘制到指定上下文。
+        @details 当数据发生变化时，重建 ShaderWrapper 列表并上传顶点缓冲，然后更新 uniform、执行绘制命令。
+        """
         if self._data_has_changed:
             self.shader_wrappers = self.get_shader_wrapper_list(ctx)
             self._data_has_changed = False

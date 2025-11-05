@@ -1,3 +1,8 @@
+"""@file manimlib/camera/camera.py
+@brief 提供场景渲染相机实现。
+@details Camera 负责维护 OpenGL 上下文、帧缓冲与统一变量，并驱动 Mobject 在 GPU 上的绘制。
+"""
+
 from __future__ import annotations
 
 import moderngl
@@ -23,6 +28,9 @@ if TYPE_CHECKING:
 
 
 class Camera(object):
+    """@brief Manim 的渲染相机。
+    @details 维护帧尺寸、FBO、光源等渲染状态，并在每帧遍历 Mobject 完成绘制输出。
+    """
     def __init__(
         self,
         window: Optional[Window] = None,
@@ -109,6 +117,10 @@ class Camera(object):
         self,
         samples: int = 0
     ) -> moderngl.Framebuffer:
+        """@brief 创建指定采样数的帧缓冲。
+        @param samples 多重采样数量。
+        @details 返回绑定颜色纹理与深度缓冲的 moderngl Framebuffer，供录制或实时预览使用。
+        """
         return self.ctx.framebuffer(
             color_attachments=self.ctx.texture(
                 self.default_pixel_shape,
@@ -122,13 +134,16 @@ class Camera(object):
         )
 
     def clear(self) -> None:
+        """@brief 清空当前渲染目标。
+        @details 将 FBO 与窗口缓冲区填充为背景色，确保新帧渲染不会混叠上一帧内容。
+        """
         self.fbo.clear(*self.background_rgba)
         if self.window:
             self.window.clear(*self.background_rgba)
 
     def blit(self, src_fbo, dst_fbo):
-        """
-        Copy blocks between fbo's using Blit
+        """@brief 使用 OpenGL Blit 拷贝两个 FBO。
+        @details 将源缓冲区的颜色附件复制到目标缓冲区，用于录制或窗口预览之间的同步。
         """
         gl.glBindFramebuffer(gl.GL_READ_FRAMEBUFFER, src_fbo.glo)
         gl.glBindFramebuffer(gl.GL_DRAW_FRAMEBUFFER, dst_fbo.glo)
@@ -139,6 +154,10 @@ class Camera(object):
         )
 
     def get_raw_fbo_data(self, dtype: str = 'f1') -> bytes:
+        """@brief 读取当前帧缓冲的原始像素数据。
+        @param dtype moderngl 读取格式，默认为 8bit 无符号字节。
+        @details 先将绘制 FBO 的内容拷贝到非多采样缓冲，再返回字节数据供写帧或截图使用。
+        """
         self.blit(self.fbo, self.draw_fbo)
         return self.draw_fbo.read(
             viewport=self.draw_fbo.viewport,
@@ -147,6 +166,9 @@ class Camera(object):
         )
 
     def get_image(self) -> Image.Image:
+        """@brief 获取当前帧的 Pillow 图像对象。
+        @details 适合在保存静帧或调试时调用，会自动读取像素并转换为 RGBA 图像。
+        """
         return Image.frombytes(
             'RGBA',
             self.get_pixel_shape(),
@@ -155,6 +177,9 @@ class Camera(object):
         )
 
     def get_pixel_array(self) -> np.ndarray:
+        """@brief 以 numpy 数组形式返回当前帧像素。
+        @details 读取 float 格式数据并转换为配置的整型精度，方便进一步处理或分析。
+        """
         raw = self.get_raw_fbo_data(dtype='f4')
         flat_arr = np.frombuffer(raw, dtype='f4')
         arr = flat_arr.reshape([*reversed(self.draw_fbo.size), self.n_channels])
@@ -223,6 +248,9 @@ class Camera(object):
 
     # Rendering
     def capture(self, *mobjects: Mobject) -> None:
+        """@brief 捕获场景中的 Mobject 并渲染到当前 FBO。
+        @details 会按顺序清空颜色缓冲、刷新相机 uniform，再遍历传入的 Mobject 调用其 `render`，最后若绑定窗口则在屏幕上交换缓冲。
+        """
         self.clear()
         self.refresh_uniforms()
         self.fbo.use()
@@ -236,6 +264,9 @@ class Camera(object):
                 self.window.swap_buffers()
 
     def refresh_uniforms(self) -> None:
+        """@brief 更新相机相关 shader uniform。
+        @details 计算视图矩阵、帧缩放以及光源位置等信息，写入当前帧批次共享的 uniform 字典。
+        """
         frame = self.frame
         view_matrix = frame.get_view_matrix()
         light_pos = self.light_source.get_location()
