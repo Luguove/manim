@@ -3,6 +3,8 @@
 @details 本文件展示了多个典型的 Manim 动画场景，帮助快速了解常用接口。
 """
 
+from dataclasses import dataclass
+
 from manimlib import *
 import numpy as np
 
@@ -718,6 +720,141 @@ class ControlsExample(Scene):
         self.textbox.set_value("Manim")
         # self.wait(60)  # 保持场景暂停以观察控件
         # self.embed()  # 进入交互式终端
+
+
+@dataclass
+class SpringState:
+    """@brief 简单弹簧质点状态容器。"""
+
+    positionM: float
+    velocityMps: float
+
+    def integrate(
+        self,
+        step_s: float,
+        spring_stiffness_npm: float,
+        damping_ns_per_m: float,
+        mass_kg: float,
+        position_limit_m: float,
+    ) -> None:
+        """@brief 使用半显式欧拉法推进弹簧质点。"""
+        acceleration_mps2 = (
+            -spring_stiffness_npm / mass_kg * self.positionM
+            - damping_ns_per_m / mass_kg * self.velocityMps
+        )
+        self.velocityMps += acceleration_mps2 * step_s
+        self.positionM += self.velocityMps * step_s
+        self.positionM = np.clip(self.positionM, -position_limit_m, position_limit_m)
+
+
+class SpringMass(VGroup):
+    """@brief 负责将物理状态映射成可视化元素的质点模型。"""
+
+    def __init__(
+        self,
+        indicator_offset_m: float,
+        velocity_scale: float,
+        velocity_clip_m: float,
+        **kwargs,
+    ) -> None:
+        super().__init__(**kwargs)
+        self.indicator_offset_m = indicator_offset_m
+        self.velocity_scale = velocity_scale
+        self.velocity_clip_m = velocity_clip_m
+
+        self.body = Dot(radius=0.12, color=YELLOW)
+        self.velocity_indicator = Arrow(
+            ORIGIN,
+            RIGHT * velocity_clip_m,
+            buff=0,
+            color=YELLOW,
+            stroke_width=6,
+        )
+        self.add(self.body, self.velocity_indicator)
+
+    def update_from_state(self, axis: NumberLine, state: SpringState) -> None:
+        center = axis.n2p(state.positionM)
+        self.body.move_to(center)
+
+        arrow_start = center + UP * self.indicator_offset_m
+        velocity_length_m = np.clip(
+            state.velocityMps * self.velocity_scale,
+            -self.velocity_clip_m,
+            self.velocity_clip_m,
+        )
+        arrow_end = arrow_start + RIGHT * velocity_length_m
+        self.velocity_indicator.put_start_and_end_on(arrow_start, arrow_end)
+
+
+class PhysicsDrivenSpring(Scene):
+    """@brief 展示如何将外部物理状态驱动 Manim 动画。"""
+
+    SpringStiffnessNpm: float = 3.0
+    DampingNsPerM: float = 0.8
+    MassKg: float = 1.0
+    InitialDisplacementM: float = 2.0
+    InitialVelocityMps: float = 0.0
+    PositionLimitM: float = 3.5
+    VelocityIndicatorOffsetM: float = 0.6
+    VelocityScale: float = 0.4
+    VelocityClipM: float = 1.5
+    TimeStepClampS: float = 1 / 60
+    SimulationDurationS: float = 8.0
+
+    def construct(self) -> None:
+        """@brief 构建最小可运行的物理驱动画面。"""
+        axis = NumberLine(x_range=(-4, 4, 1), length=8)
+        axis.shift(DOWN * 1.5)
+
+        state = SpringState(
+            positionM=self.InitialDisplacementM,
+            velocityMps=self.InitialVelocityMps,
+        )
+
+        spring = Line(axis.n2p(0.0), axis.n2p(state.positionM), color=BLUE)
+        mass = SpringMass(
+            indicator_offset_m=self.VelocityIndicatorOffsetM,
+            velocity_scale=self.VelocityScale,
+            velocity_clip_m=self.VelocityClipM,
+        )
+        mass.update_from_state(axis, state)
+
+        position_label = Text("Position (m)", font_size=28)
+        position_value = DecimalNumber(state.positionM, num_decimal_places=2)
+        velocity_label = Text("Velocity (m/s)", font_size=28)
+        velocity_value = DecimalNumber(state.velocityMps, num_decimal_places=2)
+        panel = VGroup(
+            VGroup(position_label, position_value).arrange(RIGHT, buff=0.3),
+            VGroup(velocity_label, velocity_value).arrange(RIGHT, buff=0.3),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.2)
+        panel.to_corner(UR).set_backstroke(width=4)
+
+        def advance_state(dt: float) -> None:
+            remaining = max(dt, 0)
+            while remaining > 1e-6:
+                step = min(self.TimeStepClampS, remaining)
+                state.integrate(
+                    step,
+                    self.SpringStiffnessNpm,
+                    self.DampingNsPerM,
+                    self.MassKg,
+                    self.PositionLimitM,
+                )
+                remaining -= step
+
+        def update_spring(_: Mobject, dt: float) -> None:
+            if dt > 0:
+                advance_state(dt)
+            spring.put_start_and_end_on(axis.n2p(0.0), axis.n2p(state.positionM))
+            mass.update_from_state(axis, state)
+            position_value.set_value(state.positionM)
+            velocity_value.set_value(state.velocityMps)
+
+        spring.add_updater(update_spring)
+
+        self.add(axis, spring, mass, panel)
+        self.wait(self.SimulationDurationS)
+        spring.clear_updaters()
 
 
 # See https://github.com/3b1b/videos for many, many more（更多示例参见此仓库）
